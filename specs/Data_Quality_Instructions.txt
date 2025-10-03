@@ -1,0 +1,6 @@
+Data Quality & Outlier Filtering Specification:
+1. Inspect every (Date, Value) observation chronologically.
+2. Flag and remove zero values (Value == 0) as sensor dropouts / missing telemetry.
+3. Flag and remove extreme positive spikes (> 3 standard deviations / > 1,500) as statistical anomalies.
+4. Return both an itemized table of removed outliers and the clean JSON array of valid {date, value} points.
+5. Compute descriptive statistics (count, mean, median, sample standard deviation, min, max) strictly on the cleaned dataset.
