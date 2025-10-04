@@ -1,0 +1,6 @@
+Executive Time-Series Analysis Report Specification:
+1. Summarize the dataset date range, total observations, and multi-agent validation methodology.
+2. Document all detected and removed outliers with exact dates and values.
+3. Present the cleaned time-series table and verified descriptive statistics (Count, Mean, Median, StdDev, Min, Max).
+4. Summarize the multi-iteration AnalysisChecker audit and reference the generated Original vs. Clean line chart.
+5. Conclude with an Agent Workflow Summary table listing each specialist agent's status.
