@@ -114,3 +114,60 @@ def load_reports_instructions(file_path):
     with open(full_path, "r", encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip()]
 
+def load_logs(file_path):
+    """
+    Loads agent interaction logs from a file within the 'logs' directory.
+
+    Args:
+        file_path (str): The name of the log file in the 'logs' directory.
+
+    Returns:
+        list[str]: A list of log entries. Returns an empty list if the file
+                   does not exist.
+    """
+    full_path = os.path.join("logs", file_path)
+    if not os.path.exists(full_path):
+        return []
+    with open(full_path, "r", encoding="utf-8") as f:
+        return [line.rstrip("\n") for line in f if line.strip()]
+
+def get_csv_name():
+    """
+    Interactively prompts the user to select a CSV file from the 'data' directory.
+
+    It lists all available .csv files and asks for a numerical selection.
+
+    Returns:
+        str: The relative path to the selected CSV file (e.g., 'data/my_file.csv').
+    """
+    data_dir = "data"
+    csv_files = sorted(f for f in os.listdir(data_dir) if f.lower().endswith(".csv"))
+    if not csv_files:
+        raise FileNotFoundError(f"No CSV files found in the '{data_dir}' directory.")
+
+    print("\nAvailable CSV files:")
+    for idx, name in enumerate(csv_files, start=1):
+        print(f"  {idx}. {name}")
+
+    while True:
+        choice = input(f"Select a data file (1-{len(csv_files)}): ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(csv_files):
+            return os.path.join(data_dir, csv_files[int(choice) - 1])
+        print("Invalid selection, please try again.")
+
+def load_csv_file(file_path):
+    """
+    Reads a CSV file and converts its entire content into a single string.
+
+    The CSV data is flattened into a list and then joined by ', '.
+
+    Args:
+        file_path (str): The path to the CSV file to load.
+
+    Returns:
+        str: A single string containing all the data from the CSV file.
+    """
+    df = pd.read_csv(file_path)
+    values = df.to_numpy().flatten().tolist()
+    return ", ".join(str(v) for v in values)
+
