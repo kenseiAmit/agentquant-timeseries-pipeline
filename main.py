@@ -171,3 +171,60 @@ def load_csv_file(file_path):
     values = df.to_numpy().flatten().tolist()
     return ", ".join(str(v) for v in values)
 
+def build_labeled_series(file_path):
+    """
+    Builds a list of {label, value} points from a CSV file, preserving any
+    date/time/index column as the label so it can carry through cleaning,
+    statistics, and visualization.
+
+    Args:
+        file_path (str): The path to the CSV file to load.
+
+    Returns:
+        list[dict]: A list of {'label': str, 'value': float} dictionaries,
+                    in the original row order.
+    """
+    df = pd.read_csv(file_path)
+    if df.shape[1] >= 2:
+        labels = df.iloc[:, 0].astype(str).tolist()
+        values = df.iloc[:, 1].tolist()
+    else:
+        labels = [str(i) for i in range(len(df))]
+        values = df.iloc[:, 0].tolist()
+    return [{"label": label, "value": value} for label, value in zip(labels, values)]
+
+def strip_code_fences(code):
+    """Removes surrounding markdown code fences (```python ... ```) if present."""
+    text = code.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        text = "\n".join(lines)
+    return text.strip()
+
+def extract_cleaned_data(text):
+    """Parses the 'Cleaned Data (JSON)' block of a DataCleaning agent response."""
+    match = re.search(r"```(?:json)?\s*(\[[^\]]*\])\s*```", text, re.DOTALL)
+    candidate = match.group(1) if match else None
+
+    if candidate is None:
+        start, end = text.find("["), text.rfind("]")
+        if start != -1 and end != -1 and end > start:
+            candidate = text[start:end + 1]
+
+    if not candidate:
+        return []
+
+    try:
+        data = json.loads(candidate)
+    except json.JSONDecodeError:
+        return []
+
+    cleaned = []
+    for item in data:
+        if isinstance(item, dict) and "value" in item:
+            cleaned.append({"label": str(item.get("label", "")), "value": item["value"]})
+    return cleaned
+
