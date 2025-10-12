@@ -258,3 +258,93 @@ class PythonExecutor:
         except Exception:
             return False, traceback.format_exc()
 
+def save_final_report(report, path='artifacts/final_report.md'):
+    """
+    Saves the generated final report to a markdown file.
+
+    Args:
+        report (str): The content of the report to be saved.
+        path (str, optional): The file path for the saved report.
+                              Defaults to 'artifacts/final_report.md'.
+    """
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(report)
+
+
+# -----------------
+# Agent Instructions
+# -----------------
+# Multi-Agent Specifications & GroupChat Topologies
+# 1. Complete the AGENT_CONFIG with detailed prompts for each agent.
+data_quality_instructions = '\n'.join(load_quality_instructions("Data_Quality_Instructions.txt"))
+report_instructions = '\n'.join(load_reports_instructions("Report_Instructions.txt"))
+
+AGENT_CONFIG = {
+    "PythonExecutorAgent": '''You generate runnable Python code that visualizes a dataset.
+You will be given two JSON arrays of {"label": ..., "value": ...} objects: the ORIGINAL dataset and the CLEANED dataset. The "label" may be a date, timestamp, or row index.
+Requirements:
+- Use matplotlib to plot the ORIGINAL data (blue line, legend label "Original Data") and the CLEANED data (green line, legend label "Clean Data") on a single line chart, using each item's "label" for the x-axis and "value" for the y-axis.
+- Title the chart "Original vs Clean Data", label the x-axis "Date" and the y-axis "Value", rotate the x-axis tick labels 45 degrees, and include a legend.
+- Make sure the 'artifacts' directory exists (create it with os.makedirs(..., exist_ok=True) if needed).
+- Save the resulting plot to 'artifacts/data_visualization.png'.
+- If a previous attempt failed, you will be given the error traceback - fix the code so it runs without errors.
+Output ONLY the raw, runnable Python code. Do not include explanations, comments, or markdown code fences.''',
+
+    "DataCleaning": '''You are a Data Cleaning Assistant.
+You will be given a dataset as a JSON array of objects: [{"label": ..., "value": ...}, ...]. The "label" is a date, timestamp, or index identifying each point, and "value" is the numeric reading.
+Your tasks, in order:
+1. Examine each data point and detect outliers (e.g. zeros that are likely missing/erroneous readings, and statistically extreme high or low values).
+2. Present a short cleaning plan: list each detected outlier's label and value in a table, and explain why it was flagged.
+3. Remove the identified outliers to produce the cleaned dataset, and present it as a table of the remaining labels and values.
+4. If you previously received "Failed" feedback from the Data Validation Auditor, correct your cleaning based on that feedback.
+Your response MUST end with a section in EXACTLY this format:
+Cleaned Data (JSON):
+```json
+[{"label": "...", "value": ...}, ...]
+```
+Include ONLY the remaining (non-outlier) items in that JSON array, preserving their original label and value.''',
+
+    "DataStatistics": '''You are a Data Statistics Assistant.
+Using ONLY the "value" fields of the cleaned dataset JSON produced by the Data Cleaning Assistant earlier in this conversation (never the original raw data),
+compute: count, mean, median, standard deviation, minimum, and maximum.
+Output ONLY the statistical description as a short labeled list (e.g. "Mean: 533.19"), with no commentary, plan, or explanation.''',
+
+    "AnalysisChecker": f'''You are a Data Validation Auditor.
+Follow these rules exactly:
+{data_quality_instructions}
+Review the conversation: the original dataset, the Data Cleaning Assistant's plan and cleaned dataset JSON, and the Data Statistics Assistant's descriptive statistics.
+Verify that:
+1. The cleaned dataset contains no items previously identified as outliers.
+2. The statistics were computed using the cleaned dataset only.
+Respond in JSON with fields: "title" ("Approved" or "Failed"), "original_data", "cleaned_data", "removed_data", "statistics".
+If both checks pass, the title MUST be exactly "Approved". If either check fails, the title MUST be exactly "Failed" and you must clearly explain the issue so the Data Cleaning Assistant can correct it.''',
+
+    "ReportGenerator": f'''You are a Report Generator.
+Using the full agent interaction log provided (data cleaning, statistics, validation, and visualization steps),
+write a complete, well-structured markdown report.
+Follow EXACTLY this structure and fill in every section using real details found in the log:
+{report_instructions}
+Formatting guidance:
+- For "Data Date", if the data labels are dates, use the first and last date as a range (e.g. "2025-09-01 to 2025-09-20"). Otherwise use "N/A".
+- In "Data Cleaning", present the detected outliers and the cleaned data as markdown tables of label/value pairs.
+- In "Descriptive Statistics", present the statistics as a markdown table (Statistic, Value) followed by a short bullet-point summary.
+- In "Validation Summary", list each validation iteration and its outcome.
+- In "Data Visualization", reference the image with: ![Data Visualization](data_visualization.png)
+- In "Agent Workflow Summary", include one row per agent: DataCleaning, DataStatistics, AnalysisChecker, PythonExecutorAgent, with their action and status/result.
+Output ONLY the final markdown report text.''',
+
+    "ReportChecker": f'''You are a Report Validation Auditor.
+Validate the markdown report produced by the Report Generator against this required structure and rules:
+{report_instructions}
+Check that every section is present and filled in with information consistent with the agent interaction log.
+If the report is complete and accurate, respond with the word "Approved" followed by the final report text.
+If it is missing information or inaccurate, respond with "Failed" followed by specific, actionable feedback for the Report Generator.'''
+}
+
+
+# -----------------
+# Agent Factory
+# -----------------
+# Multi-Agent Specifications & GroupChat Topologies
+# 2. Implement the agent factory function.
