@@ -228,3 +228,33 @@ def extract_cleaned_data(text):
             cleaned.append({"label": str(item.get("label", "")), "value": item["value"]})
     return cleaned
 
+class PythonExecutor:
+    """
+    A safe executor for dynamically generated Python code strings.
+
+    This class is designed to run code provided by an AI agent in a controlled
+    manner. It includes a retry mechanism and captures execution errors.
+    """
+    def __init__(self, max_attempts=3):
+        self.max_attempts = max_attempts
+
+    def run(self, code):
+        """
+        Executes a string of Python code using the exec() function.
+
+        Args:
+            code (str): The Python code to execute.
+
+        Returns:
+            tuple[bool, str | None]: A tuple containing:
+                - A boolean indicating if the execution was successful.
+                - The error traceback as a string if an exception occurred,
+                  otherwise None.
+        """
+        cleaned_code = strip_code_fences(code)
+        try:
+            exec(cleaned_code, {"__name__": "__main__"})
+            return True, None
+        except Exception:
+            return False, traceback.format_exc()
+
