@@ -348,3 +348,81 @@ If it is missing information or inaccurate, respond with "Failed" followed by sp
 # -----------------
 # Multi-Agent Specifications & GroupChat Topologies
 # 2. Implement the agent factory function.
+def create_agent(name, instructions, service, settings=None):
+    """Factory function to create a new ChatCompletionAgent."""
+    arguments = KernelArguments(settings=settings) if settings is not None else None
+    return ChatCompletionAgent(
+        name=name,
+        instructions=instructions,
+        service=service,
+        arguments=arguments,
+    )
+
+
+# -----------------
+# Termination Strategy
+# -----------------
+# A custom termination strategy that stops after user approval.
+class ApprovalTerminationStrategy(TerminationStrategy):
+    """A custom termination strategy that stops after user approval."""
+    async def should_agent_terminate(self, agent, history):
+        if "approved" in history[-1].content.lower():
+            return True
+        return False
+
+
+# -----------------
+# Agent Instantiation
+# -----------------
+# Multi-Agent Specifications & GroupChat Topologies
+# 3. Instantiate each agent with the correct name, prompt, and temperature setting.
+python_agent = create_agent(
+    "PythonExecutorAgent", AGENT_CONFIG["PythonExecutorAgent"], chat_service,
+    OpenAIChatPromptExecutionSettings(temperature=0.1),
+)
+cleaning_agent = create_agent(
+    "DataCleaning", AGENT_CONFIG["DataCleaning"], chat_service,
+    OpenAIChatPromptExecutionSettings(temperature=0.7),
+)
+stats_agent = create_agent(
+    "DataStatistics", AGENT_CONFIG["DataStatistics"], chat_service,
+    OpenAIChatPromptExecutionSettings(temperature=0.5),
+)
+checker_agent = create_agent(
+    "AnalysisChecker", AGENT_CONFIG["AnalysisChecker"], chat_service,
+    OpenAIChatPromptExecutionSettings(temperature=0.2),
+)
+report_agent = create_agent(
+    "ReportGenerator", AGENT_CONFIG["ReportGenerator"], chat_service,
+    OpenAIChatPromptExecutionSettings(temperature=1.0),
+)
+report_checker_agent = create_agent(
+    "ReportChecker", AGENT_CONFIG["ReportChecker"], chat_service,
+    OpenAIChatPromptExecutionSettings(temperature=0.2),
+)
+
+
+# -----------------
+# Group Chats
+# -----------------
+# Multi-Agent Specifications & GroupChat Topologies
+# 4. Create the three agent group chats.
+analysis_chat = AgentGroupChat(
+    agents=[cleaning_agent, stats_agent, checker_agent],
+    termination_strategy=ApprovalTerminationStrategy(agents=[checker_agent], maximum_iterations=9),
+)
+code_chat = AgentGroupChat(
+    agents=[python_agent],
+    termination_strategy=ApprovalTerminationStrategy(agents=[python_agent], maximum_iterations=1),
+)
+report_chat = AgentGroupChat(
+    agents=[report_agent, report_checker_agent],
+    termination_strategy=ApprovalTerminationStrategy(agents=[report_checker_agent], maximum_iterations=6),
+)
+
+
+# -----------------
+# Main Workflow
+# -----------------
+# End-to-End Multi-Stage Pipeline Orchestrator
+# Implement the main workflow logic, following the sequence described in the instructions.
