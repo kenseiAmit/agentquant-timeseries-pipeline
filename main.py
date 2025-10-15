@@ -426,3 +426,148 @@ report_chat = AgentGroupChat(
 # -----------------
 # End-to-End Multi-Stage Pipeline Orchestrator
 # Implement the main workflow logic, following the sequence described in the instructions.
+async def main():
+    """The main entry point for the agentic workflow."""
+    print("\n=== AgentQuant: Agentic Data Analysis Workflow ===")
+
+    # 1. Load the CSV data.
+    try:
+        csv_path = await asyncio.to_thread(get_csv_name)
+        csv_data = load_csv_file(csv_path)
+        original_series = build_labeled_series(csv_path)
+    except (FileNotFoundError, pd.errors.ParserError, ValueError) as exc:
+        print(f"\nFailed to load CSV data: {exc}")
+        return
+    print(f"\nLoaded data from '{csv_path}'.")
+
+    initial_prompt = (
+        "Raw CSV values (flattened): "
+        f"{csv_data}\n\n"
+        "Structured dataset (JSON array of {\"label\": ..., \"value\": ...} objects, "
+        "in original row order):\n"
+        f"{json.dumps(original_series)}\n\n"
+        "Begin the data cleaning and statistical analysis workflow."
+    )
+
+    # 2. Invoke the analysis chat.
+    print("\n--- Running Analysis Team (Cleaning -> Statistics -> Validation) ---")
+    await analysis_chat.add_chat_message(initial_prompt)
+
+    analysis_messages = []
+    async for message in analysis_chat.invoke():
+        log_agent_message(message)
+        print(f"\n[{message.name}]:\n{message.content}")
+        analysis_messages.append(message)
+
+    cleaning_messages = [m for m in analysis_messages if m.name == cleaning_agent.name]
+    if not cleaning_messages:
+        print("\nThe Data Cleaning Assistant produced no output. Aborting workflow.")
+        return
+    last_cleaning_message = cleaning_messages[-1].content
+
+    # 3. Get human approval.
+    print("\n--- Analysis complete. Please review the results above. ---")
+    approval = await asyncio.to_thread(
+        input, "Do you approve continuing to the visualization step? (yes/no): "
+    )
+    approval = approval.strip().lower()
+    if approval != "yes":
+        print("Workflow halted: approval not granted.")
+        return
+
+    # 4. Save the cleaned data.
+    cleaned_series = extract_cleaned_data(last_cleaning_message)
+    if not cleaned_series:
+        print("\nCould not parse cleaned data from the Data Cleaning Assistant's response. Aborting workflow.")
+        return
+    try:
+        with open("data-cleaned.json", "w", encoding="utf-8") as f:
+            json.dump(cleaned_series, f, indent=2)
+    except OSError as exc:
+        print(f"\nFailed to save cleaned data: {exc}")
+        return
+    print("\nSaved cleaned data to 'data-cleaned.json'.")
+
+    # 5. Invoke the code chat to generate and execute visualization code.
+    print("\n--- Running Visualization Team ---")
+    viz_prompt = (
+        "Original dataset (JSON array of {\"label\": ..., \"value\": ...} objects):\n"
+        f"{json.dumps(original_series)}\n\n"
+        "Cleaned dataset (JSON array of {\"label\": ..., \"value\": ...} objects):\n"
+        f"{json.dumps(cleaned_series)}\n\n"
+        "Generate the Python visualization code as instructed."
+    )
+    await code_chat.add_chat_message(viz_prompt)
+
+    # 6. Execute the code in a retry loop.
+    executor = PythonExecutor(max_attempts=3)
+    working_code = None
+    for attempt in range(1, executor.max_attempts + 1):
+        print(f"\nAttempt {attempt}/{executor.max_attempts}: generating visualization code...")
+
+        code_response = None
+        async for message in code_chat.invoke():
+            log_agent_message(message)
+            code_response = message.content
+            print(f"\n[{message.name}]:\n{code_response}")
+
+        if code_response is None:
+            print("\nThe Python Executor Agent produced no output. Aborting workflow.")
+            return
+
+        success, error = executor.run(code_response)
+        if success:
+            working_code = code_response
+            print("\nVisualization code executed successfully.")
+            break
+
+        print(f"\nExecution failed:\n{error}")
+        if attempt < executor.max_attempts:
+            await code_chat.add_chat_message(
+                f"The previous code failed with this error:\n{error}\n"
+                "Please fix the code. Output ONLY the corrected raw Python code."
+            )
+
+    if working_code is None:
+        print("\nFailed to generate working visualization code after multiple attempts.")
+        return
+
+    # 7. Save the working visualization script.
+    os.makedirs("artifacts", exist_ok=True)
+    with open("artifacts/data_visualization_code.py", "w", encoding="utf-8") as f:
+        f.write(strip_code_fences(working_code))
+    print("\nSaved working visualization script to 'artifacts/data_visualization_code.py'.")
+
+    # 8. Invoke the report chat to generate the final report.
+    print("\n--- Running Report Team ---")
+    log_lines = load_logs("agent_chat.log")
+    log_text = "\n".join(log_lines)
+    report_prompt = (
+        "Below is the full agent interaction log for this data analysis session:\n\n"
+        f"{log_text}\n\n"
+        "Using this log, generate the final report following the required structure."
+    )
+    await report_chat.add_chat_message(report_prompt)
+
+    report_messages = []
+    async for message in report_chat.invoke():
+        log_agent_message(message)
+        print(f"\n[{message.name}]:\n{message.content}")
+        report_messages.append(message)
+
+    report_gen_messages = [m for m in report_messages if m.name == report_agent.name]
+    if not report_gen_messages:
+        print("\nThe Report Generator produced no output. Aborting workflow.")
+        return
+    final_report = report_gen_messages[-1].content
+
+    # 9. Save the final report.
+    save_final_report(final_report)
+    print("\n=== Workflow complete. Final report saved to 'artifacts/final_report.md'. ===")
+
+
+# -----------------
+# Main Execution
+# -----------------
+if __name__ == "__main__":
+    asyncio.run(main())
