@@ -17,3 +17,13 @@ flowchart TD
 
 ---
 
+## Verified Benchmark Run (`2025-09-01` to `2025-09-20`)
+
+Full executed output report available in [`reports/sample_analysis_report.pdf`](reports/sample_analysis_report.pdf):
+- **Anomaly Detection (`n = 20` → `n = 16` clean observations)**: Automatically isolated and removed `2` zero-value sensor dropouts (`2025-09-05: 0`, `2025-09-09: 0`) and `2` extreme spikes (`2025-09-15: 2500`, `2025-09-18: 5545`).
+- **Verified Clean Summary Statistics (`AnalysisChecker` 2-iteration audit)**:
+  - **Count**: `16` | **Mean**: `533.19` | **Median**: `521.50` | **Std Dev**: `37.21` | **Min**: `488` | **Max**: `621`.
+- **Self-Healing Visualization**: Generated and executed `artifacts/data_visualization_code.py` producing dual-series `Original vs Clean Data` comparison plots.
+
+---
+
