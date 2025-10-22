@@ -1,11 +1,13 @@
 <div align="center">
   <img src="assets/hero-banner.svg" alt="AgentQuant Time-Series Pipeline" width="100%" />
   <br/><br/>
-  ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)
-  ![Semantic Kernel](https://img.shields.io/badge/Agents-Semantic%20Kernel%20AgentGroupChat-0078D4?style=flat-square)
-  ![Azure OpenAI](https://img.shields.io/badge/LLM-Azure%20OpenAI%20gpt--4.1-2563EB?style=flat-square)
-  ![HITL](https://img.shields.io/badge/Safety-HITL%20Gate%20%2B%20Self--Healing%20Exec-0D9488?style=flat-square)
-  ![License](https://img.shields.io/badge/License-MIT-slate?style=flat-square)
+  <p>
+    <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/Agents-Semantic%20Kernel%20AgentGroupChat-0078D4?style=flat-square" alt="Semantic Kernel" />
+    <img src="https://img.shields.io/badge/LLM-Azure%20OpenAI%20gpt--4.1-2563EB?style=flat-square" alt="Azure OpenAI" />
+    <img src="https://img.shields.io/badge/Safety-HITL%20Gate%20%2B%20Self--Healing%20Exec-0D9488?style=flat-square" alt="HITL" />
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-475569?style=flat-square" alt="License" /></a>
+  </p>
 </div>
 
 ---
