@@ -1,10 +1,14 @@
-# AgentQuant: Multi-Agent Time-Series Cleaning, Audit & Self-Healing Visualization Pipeline
+<div align="center">
+  <img src="assets/hero-banner.svg" alt="AgentQuant Time-Series Pipeline" width="100%" />
+  <br/><br/>
+  ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)
+  ![Semantic Kernel](https://img.shields.io/badge/Agents-Semantic%20Kernel%20AgentGroupChat-0078D4?style=flat-square)
+  ![Azure OpenAI](https://img.shields.io/badge/LLM-Azure%20OpenAI%20gpt--4.1-2563EB?style=flat-square)
+  ![HITL](https://img.shields.io/badge/Safety-HITL%20Gate%20%2B%20Self--Healing%20Exec-0D9488?style=flat-square)
+  ![License](https://img.shields.io/badge/License-MIT-slate?style=flat-square)
+</div>
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)
-![Semantic Kernel](https://img.shields.io/badge/Agents-Semantic%20Kernel%20AgentGroupChat-0078D4?style=flat-square)
-![Azure OpenAI](https://img.shields.io/badge/LLM-Azure%20OpenAI%20gpt--4.1-2563EB?style=flat-square)
-![HITL](https://img.shields.io/badge/Safety-HITL%20Gate%20%2B%20Self--Healing%20Exec-0D9488?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-slate?style=flat-square)
+---
 
 Four-stage multi-agent quantitative time-series workflow orchestrated with **Microsoft Semantic Kernel (`1.37.0`)** and **Azure OpenAI (`gpt-4.1`)**—coordinating **6 specialized agents** across **3 `AgentGroupChat` stages** with deterministic auditor loops, interactive **Human-in-the-Loop (HITL)** approval gating, and **self-healing `PythonExecutor` matplotlib code generation**.
 
