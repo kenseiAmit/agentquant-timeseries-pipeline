@@ -1,29 +1,67 @@
 # AgentQuant: Multi-Agent Time-Series Cleaning, Audit & Self-Healing Visualization Pipeline
 
-Four-stage multi-agent quantitative data analysis workflow built on **Microsoft Semantic Kernel (`1.37.0`)** and **Azure OpenAI (`gpt-4.1`)**—coordinating **6 specialized agents** across **3 `AgentGroupChat` topologies** with deterministic auditor feedback loops, interactive **Human-in-the-Loop (HITL)** approval gating, and **self-healing `PythonExecutor` matplotlib code generation**.
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)
+![Semantic Kernel](https://img.shields.io/badge/Agents-Semantic%20Kernel%20AgentGroupChat-0078D4?style=flat-square)
+![Azure OpenAI](https://img.shields.io/badge/LLM-Azure%20OpenAI%20gpt--4.1-2563EB?style=flat-square)
+![HITL](https://img.shields.io/badge/Safety-HITL%20Gate%20%2B%20Self--Healing%20Exec-0D9488?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-slate?style=flat-square)
+
+Four-stage multi-agent quantitative time-series workflow orchestrated with **Microsoft Semantic Kernel (`1.37.0`)** and **Azure OpenAI (`gpt-4.1`)**—coordinating **6 specialized agents** across **3 `AgentGroupChat` stages** with deterministic auditor loops, interactive **Human-in-the-Loop (HITL)** approval gating, and **self-healing `PythonExecutor` matplotlib code generation**.
+
+![AgentQuant Time-Series Cleaning Telemetry](docs/images/agentquant_timeseries_cleaning.png)
 
 ---
 
-## Multi-Agent GroupChat Architecture
+## 1. Four-Stage Multi-Agent GroupChat Topology
 
 ```mermaid
 flowchart TD
-    A["Raw Time-Series CSV<br/>(data/timeseries_sep2025.csv)"] --> B["Stage 1: analysis_chat (AgentGroupChat)<br/>DataCleaning -> DataStatistics -> AnalysisChecker"]
-    B --> C{"Stage 2: Human-in-the-Loop<br/>Approval Gate"}
-    C -- "Approved" --> D["Persist data-cleaned.json"]
-    D --> E["Stage 3: code_chat + PythonExecutor (Max 3 Retries)<br/>PythonExecutorAgent Self-Healing Matplotlib Generation"]
-    E --> F["Stage 4: report_chat (AgentGroupChat)<br/>ReportGenerator <-> ReportChecker -> artifacts/final_report.md"]
+    A["data/timeseries_sep2025.csv<br/>(20 Daily Observations)"] --> B["Stage 1: analysis_chat (Max 9x)<br/>DataCleaning -> DataStatistics -> AnalysisChecker"]
+    B --> C{"Stage 2: Human-in-the-Loop<br/>Console Approval Gate"}
+    C -- "yes" --> D["Persist data-cleaned.json (n = 16)"]
+    D --> E["Stage 3: code_chat + PythonExecutor (Max 3x)<br/>Self-Healing Matplotlib Script Synthesis & Run"]
+    E --> F["Stage 4: report_chat (Max 6x)<br/>ReportGenerator <-> ReportChecker -> final_report.md"]
 ```
 
 ---
 
-## Verified Benchmark Run (`2025-09-01` to `2025-09-20`)
+## 2. Benchmark Dataset & Executed Report ([`reports/sample_analysis_report.pdf`](reports/sample_analysis_report.pdf))
 
-Full executed output report available in [`reports/sample_analysis_report.pdf`](reports/sample_analysis_report.pdf):
-- **Anomaly Detection (`n = 20` → `n = 16` clean observations)**: Automatically isolated and removed `2` zero-value sensor dropouts (`2025-09-05: 0`, `2025-09-09: 0`) and `2` extreme spikes (`2025-09-15: 2500`, `2025-09-18: 5545`).
-- **Verified Clean Summary Statistics (`AnalysisChecker` 2-iteration audit)**:
-  - **Count**: `16` | **Mean**: `533.19` | **Median**: `521.50` | **Std Dev**: `37.21` | **Min**: `488` | **Max**: `621`.
-- **Self-Healing Visualization**: Generated and executed `artifacts/data_visualization_code.py` producing dual-series `Original vs Clean Data` comparison plots.
+```csv
+Date,Value
+2025-09-01,542
+2025-09-02,489
+2025-09-03,563
+2025-09-04,512
+2025-09-05,0
+2025-09-06,598
+2025-09-07,621
+2025-09-08,505
+2025-09-09,0
+2025-09-10,534
+2025-09-11,511
+2025-09-12,490
+2025-09-13,523
+2025-09-14,514
+2025-09-15,2500
+2025-09-16,527
+2025-09-17,499
+2025-09-18,5545
+2025-09-19,488
+2025-09-20,531
+```
 
----
+- **Removed Anomalies (`4`)**: `2025-09-05 (0)`, `2025-09-09 (0)`, `2025-09-15 (2500)`, `2025-09-18 (5545)`.
+- **Verified Clean Statistics (`n = 16`)**: `Mean = 533.19`, `Median = 521.50`, `StdDev = 37.21`, `Min = 488`, `Max = 621`.
 
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python main.py
+```
+
+## License
+
+MIT License — see [LICENSE](LICENSE).
