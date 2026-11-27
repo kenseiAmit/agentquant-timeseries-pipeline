@@ -12,6 +12,8 @@
 
 ---
 
+![AgentQuant Time-Series Pipeline — Multi-Agent GroupChat Blueprint](docs/images/architecture_blueprint.png)
+
 Four-stage multi-agent quantitative time-series workflow orchestrated with **Microsoft Semantic Kernel (`1.37.0`)** and **Azure OpenAI (`gpt-4.1`)**—coordinating **6 specialized agents** across **3 `AgentGroupChat` stages** with deterministic auditor loops, interactive **Human-in-the-Loop (HITL)** approval gating, and **self-healing `PythonExecutor` matplotlib code generation**.
 
 ![AgentQuant Time-Series Cleaning Telemetry](docs/images/agentquant_timeseries_cleaning.png)
